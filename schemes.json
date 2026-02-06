@@ -1,0 +1,20 @@
+[
+  {
+    "scheme_name": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
+    "description": "An income support scheme for all landholding farmer families in the country.",
+    "benefits": "Financial benefit of Rs. 6000/- per year in three equal installments.",
+    "eligibility": "All landholding farmer families having cultivable landholding in their names."
+  },
+  {
+    "scheme_name": "Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+    "description": "A crop insurance scheme to provide financial support to farmers suffering crop loss/damage.",
+    "benefits": "Insurance coverage and financial support.",
+    "eligibility": "Farmers growing notified crops in notified areas."
+  },
+  {
+    "scheme_name": "Soil Health Card Scheme",
+    "description": "Government issues soil health cards to farmers which will carry crop-wise recommendations of nutrients and fertilizers.",
+    "benefits": "Improves soil health and reduces fertilizer cost.",
+    "eligibility": "All farmers."
+  }
+]

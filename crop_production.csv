@@ -1,0 +1,11 @@
+State_Name,District_Name,Crop_Year,Season,Crop,Area,Production,Yield
+Andhra Pradesh,East Godavari,2023,Kharif,Rice,100000,500000,5.0
+Punjab,Ludhiana,2023,Rabi,Wheat,80000,400000,5.0
+Maharashtra,Nagpur,2023,Kharif,Cotton,50000,25000,0.5
+Uttar Pradesh,Lucknow,2023,Rabi,Sugarcane,120000,6000000,50.0
+Karnataka,Mandya,2023,Kharif,Ragi,30000,60000,2.0
+Telangana,Warangal,2023,Kharif,Chilli,20000,40000,2.0
+West Bengal,Bardhaman,2023,Kharif,Rice,90000,450000,5.0
+Gujarat,Rajkot,2023,Kharif,Groundnut,60000,120000,2.0
+Madhya Pradesh,Indore,2023,Rabi,Soyabean,70000,140000,2.0
+Tamil Nadu,Thanjavur,2023,Kharif,Rice,85000,425000,5.0
