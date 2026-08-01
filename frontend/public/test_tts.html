@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Debug</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #log {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>TTS Isolation Test</h1>
+    <p>Click the buttons below to test browser speech synthesis.</p>
+
+    <div>
+        <button onclick="speak('Hello, this is a test of the speech synthesis API.', 'en-US')">Speak English</button>
+        <button onclick="speak('नमस्ते, यह हिंदी में एक परीक्षण है।', 'hi-IN')">Speak Hindi</button>
+        <!-- Telugu might not have a voice, but we try -->
+        <button onclick="speak('హలో, ఇది తెలుగులో పరీక్ష.', 'te-IN')">Speak Telugu</button>
+        <button onclick="showVoices()">List Voices</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        function log(msg, type = 'info') {
+            const el = document.getElementById('log');
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            if (type === 'error') div.className = 'error';
+            if (type === 'success') div.className = 'success';
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+            console.log(msg);
+        }
+
+        function showVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            log(`Loaded ${voices.length} voices.`);
+            voices.forEach(v => {
+                log(`- ${v.name} (${v.lang}) [${v.default ? 'Default' : ''}]`);
+            });
+            if (voices.length === 0) {
+                log("WARNING: No voices found. This usually means the browser has not loaded them yet or TTS is disabled.", "error");
+            }
+        }
+
+        // Wait for voices to load
+        window.speechSynthesis.onvoiceschanged = () => {
+            log("Event: voiceschanged fired.");
+        };
+
+        function speak(text, lang) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang;
+
+            // Try to find a matching voice
+            const voices = window.speechSynthesis.getVoices();
+            const voice = voices.find(v => v.lang.includes(lang));
+            if (voice) {
+                u.voice = voice;
+                log(`Selected voice: ${voice.name} for ${lang}`, "success");
+            } else {
+                log(`No specific voice found for ${lang}, using default.`, "error");
+            }
+
+            u.onstart = () => log(`Started speaking: "${text}"`, "success");
+            u.onend = () => log("Finished speaking.");
+            u.onerror = (e) => log(`Error: ${e.error}`, "error");
+
+            window.speechSynthesis.speak(u);
+        }
+
+        // Init
+        if ('speechSynthesis' in window) {
+            log("SpeechSynthesis API is supported.");
+            setTimeout(showVoices, 500); // Check initial state
+        } else {
+            log("CRITICAL: SpeechSynthesis API NOT supported in this browser.", "error");
+        }
+    </script>
+</body>
+
+</html>

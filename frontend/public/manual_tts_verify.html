@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced TTS Debugger</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #222;
+            color: #0f0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            cursor: pointer;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #444;
+        }
+
+        .btn-reset {
+            background: #500;
+            border-color: #800;
+        }
+
+        #logs {
+            margin-top: 20px;
+            border: 1px solid #444;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            background: #111;
+            font-size: 14px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+
+        .error {
+            color: #f55;
+        }
+
+        .success {
+            color: #5f5;
+        }
+
+        .info {
+            color: #aaf;
+        }
+
+        #status {
+            font-size: 20px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔊 TTS Debugger</h1>
+
+    <div id="status">Status: Idle</div>
+
+    <div>
+        <h3>1. System Controls</h3>
+        <button class="btn btn-reset" onclick="resetAudio()">🛑 Force Reset / Cancel</button>
+        <button class="btn" onclick="checkState()">🔍 Check System State</button>
+    </div>
+
+    <div>
+        <h3>2. Simple Tests (No Language/Voice Force)</h3>
+        <button class="btn" onclick="speakSimple('Hello Check 1 2 3')">📢 Speak "Hello" (Default)</button>
+    </div>
+
+    <div>
+        <h3>3. Language Tests (With Voice Selection)</h3>
+        <button class="btn" onclick="testTTS('en')">🇬🇧 Test English</button>
+        <button class="btn" onclick="testTTS('hi')">🇮🇳 Test Hindi</button>
+        <button class="btn" onclick="testTTS('te')">🌾 Test Telugu</button>
+    </div>
+
+    <div id="logs"></div>
+
+    <script>
+        function log(msg, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+            console.log(msg);
+        }
+
+        function resetAudio() {
+            window.speechSynthesis.cancel();
+            log("Executed window.speechSynthesis.cancel()", 'action');
+            document.getElementById('status').textContent = 'Status: Reset';
+        }
+
+        function checkState() {
+            log(`Speaking: ${window.speechSynthesis.speaking}`, 'info');
+            log(`Pending: ${window.speechSynthesis.pending}`, 'info');
+            log(`Paused: ${window.speechSynthesis.paused}`, 'info');
+            log(`Voices Loaded: ${window.speechSynthesis.getVoices().length}`, 'info');
+        }
+
+        function speakSimple(text) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.onstart = () => log("Simple: Started", 'success');
+            u.onend = () => log("Simple: Ended", 'success');
+            u.onerror = (e) => log(`Simple: Error - ${e.error}`, 'error');
+            window.speechSynthesis.speak(u);
+            log(`Attempting to speak: "${text}"`, 'action');
+        }
+
+        function getVoice(language) {
+            const voices = window.speechSynthesis.getVoices();
+            let voice = null;
+            if (language === 'hi') {
+                voice = voices.find(v => v.name.includes('Google') && v.lang.includes('hi')) || voices.find(v => v.lang.includes('hi'));
+            } else if (language === 'te') {
+                voice = voices.find(v => v.name.includes('Google') && v.lang.includes('te')) || voices.find(v => v.lang.includes('te'));
+            } else { // en
+                voice = voices.find(v => v.name.includes('Google') && v.lang.includes('en-IN')) || voices.find(v => v.lang.includes('en-IN')) || voices[0];
+            }
+            return voice;
+        }
+
+        function testTTS(language) {
+            window.speechSynthesis.cancel();
+
+            const textMap = {
+                'en': "This is a test of the English system.",
+                'hi': "यह हिंदी परीक्षण है।",
+                'te': "ఇది తెలుగు పరీక్ష."
+            };
+
+            const text = textMap[language];
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Wait for voices
+            if (window.speechSynthesis.getVoices().length === 0) {
+                log("Voices not loaded. Waiting for onvoiceschanged...", 'warning');
+                window.speechSynthesis.onvoiceschanged = () => {
+                    log("Voices changed event fired.", 'info');
+                    speakComplex(utterance, language);
+                };
+            } else {
+                speakComplex(utterance, language);
+            }
+        }
+
+        function speakComplex(utterance, language) {
+            const voice = getVoice(language);
+
+            if (voice) {
+                utterance.voice = voice;
+                log(`Selected Voice: ${voice.name} (${voice.lang})`, 'success');
+            } else {
+                log(`NO SPECIFIC VOICE for ${language}. Using Browser Default.`, 'warning');
+            }
+
+            // Setting lang is critical, but if the voice doesn't support it, it might fail.
+            // We set it anyway as per standard.
+            utterance.lang = language === 'hi' ? 'hi-IN' : language === 'te' ? 'te-IN' : 'en-IN';
+
+            utterance.onstart = () => {
+                log(`STARTED (${language})`, 'success');
+                document.getElementById('status').textContent = `Speaking ${language}...`;
+            };
+
+            utterance.onend = () => {
+                log(`ENDED (${language})`, 'success');
+                document.getElementById('status').textContent = 'Finished';
+            };
+
+            utterance.onerror = (e) => {
+                log(`ERROR (${language}): ${e.error}`, 'error');
+                document.getElementById('status').textContent = `Error: ${e.error}`;
+            };
+
+            log(`Queuing: "${utterance.text}"`, 'action');
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Initialize
+        window.speechSynthesis.onvoiceschanged = () => {
+            log(`Voices loaded: ${window.speechSynthesis.getVoices().length}`);
+            checkState();
+        };
+        setTimeout(checkState, 1000);
+    </script>
+</body>
+
+</html>
